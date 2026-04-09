@@ -1,4 +1,5 @@
 import { createBrowserRouter } from "react-router";
+import LandingPage from "./pages/LandingPage";
 import LoginPage from "./pages/LoginPage";
 import DashboardLayout from "./pages/DashboardLayout";
 import AdminDashboard from "./pages/AdminDashboard";
@@ -10,6 +11,10 @@ import Fees from "./pages/Fees";
 export const router = createBrowserRouter([
   {
     path: "/",
+    Component: LandingPage,
+  },
+  {
+    path: "/login",
     Component: LoginPage,
   },
   {
