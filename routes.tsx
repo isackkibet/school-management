@@ -1,15 +1,20 @@
 import { createBrowserRouter } from "react-router";
-import Login from "./pages/Login";
-import AdminDashboard from "./pages/AdminDashboard";
-import Students from "./pages/Students";
-import Attendance from "./pages/Attendance";
-import Exams from "./pages/Exams";
-import Fees from "./pages/Fees";
-import Layout from "./components/Layout";
+import Login from "./src/app/pages/Login";
+import LandingPage from "./src/app/pages/LandingPage";
+import AdminDashboard from "./src/app/pages/AdminDashboard";
+import Students from "./src/app/pages/Students";
+import Attendance from "./src/app/pages/Attendance";
+import Exams from "./src/app/pages/Exams";
+import Fees from "./src/app/pages/Fees";
+import Layout from "./src/app/components/Layout";
 
 export const router = createBrowserRouter([
   {
     path: "/",
+    Component: LandingPage,
+  },
+  {
+    path: "/login",
     Component: Login,
   },
   {
