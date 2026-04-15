@@ -12,13 +12,20 @@ export default function DashboardLayout() {
     navigate("/");
   };
 
-  const navItems = [
-    { path: "/dashboard", label: "Dashboard", icon: GraduationCap },
-    { path: "/dashboard/students", label: "Students", icon: Users },
-    { path: "/dashboard/attendance", label: "Attendance", icon: ClipboardCheck },
-    { path: "/dashboard/exams", label: "Exams", icon: BookOpen },
-    { path: "/dashboard/fees", label: "Fees", icon: DollarSign },
-  ];
+  // Role-based navigation items
+  const getNavItems = () => {
+    const allItems = [
+      { path: "/dashboard", label: "Dashboard", icon: GraduationCap, roles: ["admin", "teacher", "student", "parent", "accountant"] },
+      { path: "/dashboard/students", label: "Students", icon: Users, roles: ["admin", "teacher"] },
+      { path: "/dashboard/attendance", label: "Attendance", icon: ClipboardCheck, roles: ["admin", "teacher"] },
+      { path: "/dashboard/exams", label: "Exams & Results", icon: BookOpen, roles: ["admin", "teacher", "student", "parent"] },
+      { path: "/dashboard/fees", label: "Fees", icon: DollarSign, roles: ["admin", "accountant", "student", "parent"] },
+    ];
+
+    return allItems.filter(item => item.roles.includes(role));
+  };
+
+  const navItems = getNavItems();
 
   return (
     <div className="min-h-screen bg-gray-50">

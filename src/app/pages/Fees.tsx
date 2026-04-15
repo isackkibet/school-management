@@ -11,6 +11,7 @@ import { students, fees } from "../lib/mockData";
 
 export default function Fees() {
   const [selectedStudent, setSelectedStudent] = useState("");
+  const role = localStorage.getItem("userRole") || "admin";
 
   const handleMpesaRequest = () => {
     alert("M-Pesa payment request sent to parent's phone!");
@@ -20,6 +21,125 @@ export default function Fees() {
     alert("Payment recorded successfully! Receipt generated.");
   };
 
+  // Student/Parent view - see their own fees only
+  if (role === "student" || role === "parent") {
+    const studentFees = {
+      name: "Brian Kiprop",
+      admissionNo: "KPS001",
+      class: "Std 8",
+      totalFees: 11000,
+      paid: 8500,
+      balance: 2500,
+    };
+
+    const feeBreakdown = [
+      { type: "Tuition", amount: 5000, status: "Paid" },
+      { type: "Uniform", amount: 2000, status: "Paid" },
+      { type: "Lunch", amount: 1500, status: "Paid" },
+      { type: "Activities", amount: 1500, status: "Pending" },
+      { type: "Trips", amount: 1000, status: "Pending" },
+    ];
+
+    return (
+      <div>
+        <h1 className="text-3xl mb-6">{role === "parent" ? "Student Fees" : "My Fees"}</h1>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <Card className="border-none shadow-md">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm text-gray-500 uppercase">Total Fees</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold text-slate-800">KSh {studentFees.totalFees.toLocaleString()}</p>
+              <p className="text-sm text-gray-500 mt-1">This term</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-none shadow-md">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm text-green-600 uppercase">Amount Paid</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold text-green-600">KSh {studentFees.paid.toLocaleString()}</p>
+              <p className="text-sm text-gray-500 mt-1">{Math.round((studentFees.paid / studentFees.totalFees) * 100)}% paid</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-none shadow-md">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm text-red-600 uppercase">Balance</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-3xl font-bold text-red-600">KSh {studentFees.balance.toLocaleString()}</p>
+              <p className="text-sm text-gray-500 mt-1">{studentFees.balance > 0 ? "Pending payment" : "Fully paid"}</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-lg">Student Information</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              <div>
+                <p className="text-sm text-gray-500">Name</p>
+                <p className="font-semibold">{studentFees.name}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Admission No</p>
+                <p className="font-semibold">{studentFees.admissionNo}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Class</p>
+                <p className="font-semibold">{studentFees.class}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Fee Breakdown</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {feeBreakdown.map((fee, idx) => (
+                <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
+                  <div>
+                    <p className="font-semibold">{fee.type}</p>
+                    <p className="text-sm text-gray-500">KSh {fee.amount.toLocaleString()}</p>
+                  </div>
+                  <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+                    fee.status === "Paid" 
+                      ? "bg-green-100 text-green-800" 
+                      : "bg-orange-100 text-orange-800"
+                  }`}>
+                    {fee.status}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {studentFees.balance > 0 && (
+          <div className="mt-6 flex gap-4">
+            <Button className="bg-green-700 hover:bg-green-800 flex-1" onClick={handleMpesaRequest}>
+              <Smartphone className="w-4 h-4 mr-2" />
+              Pay with M-Pesa
+            </Button>
+            <Button variant="outline" className="flex-1">
+              <Receipt className="w-4 h-4 mr-2" />
+              View Payment History
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Admin/Accountant view - manage all fees
   return (
     <div>
       <h1 className="text-3xl mb-6">Fee Management</h1>
