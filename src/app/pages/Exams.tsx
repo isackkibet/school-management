@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "../components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { Input } from "../components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Download } from "lucide-react";
+import { Download, Save, RefreshCw, CheckCircle, AlertCircle } from "lucide-react";
 import { students, classes, subjects } from "../lib/mockData";
+import { examResultsAPI, studentAPI } from "../lib/dataStore";
 
 export default function Exams() {
   const [selectedClass, setSelectedClass] = useState("Std 8");
@@ -22,11 +23,67 @@ export default function Exams() {
 
   const classStudents = students.filter(s => s.class === selectedClass);
 
-  // Teacher/Admin view - can edit marks
+  // Teacher/Admin view - can edit marks with live saving
   if (role === "teacher" || role === "admin") {
+    const [marks, setMarks] = useState<Record<string, Record<string, number>>>({});
+    const [savedStatus, setSavedStatus] = useState<Record<string, boolean>>({});
+    const [showSuccess, setShowSuccess] = useState(false);
+
+    // Load existing marks when class/term changes
+    useEffect(() => {
+      const newMarks: Record<string, Record<string, number>> = {};
+      classStudents.forEach(student => {
+        const existingMarks = examResultsAPI.getResultsByStudent(selectedClass, selectedTerm, student.id);
+        newMarks[student.id] = existingMarks || {};
+      });
+      setMarks(newMarks);
+    }, [selectedClass, selectedTerm]);
+
+    const handleMarkChange = (studentId: string, subject: string, value: number) => {
+      setMarks(prev => ({
+        ...prev,
+        [studentId]: {
+          ...prev[studentId],
+          [subject]: value
+        }
+      }));
+      setSavedStatus(prev => ({ ...prev, [studentId]: false }));
+    };
+
+    const saveStudentMarks = (studentId: string) => {
+      examResultsAPI.saveResults(selectedClass, selectedTerm, studentId, marks[studentId] || {});
+      setSavedStatus(prev => ({ ...prev, [studentId]: true }));
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 2000);
+    };
+
+    const saveAllMarks = () => {
+      classStudents.forEach(student => {
+        if (marks[student.id]) {
+          examResultsAPI.saveResults(selectedClass, selectedTerm, student.id, marks[student.id]);
+        }
+      });
+      setSavedStatus({});
+      classStudents.forEach(s => setSavedStatus(prev => ({ ...prev, [s.id]: true })));
+      setShowSuccess(true);
+      setTimeout(() => setShowSuccess(false), 3000);
+    };
     return (
       <div>
-        <h1 className="text-3xl mb-6">Exam Management</h1>
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl">Exam Results Management</h1>
+          <Button onClick={saveAllMarks} className="bg-green-700 hover:bg-green-800">
+            <Save className="w-4 h-4 mr-2" />
+            Save All Results
+          </Button>
+        </div>
+
+        {showSuccess && (
+          <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 animate-pulse">
+            <CheckCircle className="w-5 h-5 text-green-600" />
+            <span className="text-green-800 font-semibold">Results saved successfully! Students can now view their updated results.</span>
+          </div>
+        )}
 
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <div className="flex gap-4">
@@ -86,38 +143,64 @@ export default function Exams() {
                 ))}
                 <TableHead>Average</TableHead>
                 <TableHead>Grade</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {classStudents.map(student => {
-                const mockMarks = subjects.map(() => Math.floor(Math.random() * 40) + 60);
-                const average = Math.round(mockMarks.reduce((a, b) => a + b, 0) / subjects.length);
-                const grade = getGrade(average);
+                const studentMarks = marks[student.id] || {};
+                const isSaved = savedStatus[student.id];
+                const average = examResultsAPI.getStudentAverage(selectedClass, selectedTerm, student.id);
+                const grade = examResultsAPI.getStudentGrade(selectedClass, selectedTerm, student.id);
 
                 return (
                   <TableRow key={student.id}>
-                    <TableCell>{student.name}</TableCell>
-                    {mockMarks.map((mark, idx) => (
-                      <TableCell key={idx}>
+                    <TableCell>
+                      <div>
+                        <p className="font-semibold">{student.name}</p>
+                        <p className="text-xs text-gray-500">{student.admissionNo}</p>
+                      </div>
+                    </TableCell>
+                    {subjects.map(subject => (
+                      <TableCell key={subject}>
                         <Input
                           type="number"
-                          defaultValue={mark}
+                          value={studentMarks[subject] || ''}
+                          onChange={(e) => handleMarkChange(student.id, subject, parseInt(e.target.value) || 0)}
                           className="w-20"
                           min="0"
                           max="100"
+                          placeholder="-"
                         />
                       </TableCell>
                     ))}
-                    <TableCell>{average}</TableCell>
                     <TableCell>
-                      <span className={`px-2 py-1 rounded ${
-                        grade === "A" ? "bg-green-100 text-green-800" :
-                        grade === "B" ? "bg-blue-100 text-blue-800" :
-                        grade === "C" ? "bg-yellow-100 text-yellow-800" :
-                        "bg-red-100 text-red-800"
-                      }`}>
-                        {grade}
-                      </span>
+                      <span className="text-lg font-bold">{average || '-'}</span>
+                    </TableCell>
+                    <TableCell>
+                      {grade ? (
+                        <span className={`px-2 py-1 rounded ${
+                          grade === "A" ? "bg-green-100 text-green-800" :
+                          grade === "B" ? "bg-blue-100 text-blue-800" :
+                          grade === "C" ? "bg-yellow-100 text-yellow-800" :
+                          "bg-red-100 text-red-800"
+                        }`}>
+                          {grade}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex gap-2">
+                        <Button 
+                          size="sm" 
+                          onClick={() => saveStudentMarks(student.id)}
+                          className={isSaved ? "bg-green-600" : "bg-blue-600 hover:bg-blue-700"}
+                        >
+                          {isSaved ? <CheckCircle className="w-4 h-4" /> : <Save className="w-4 h-4" />}
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 );
@@ -129,7 +212,27 @@ export default function Exams() {
     );
   }
 
-  // Student/Parent view - read-only results
+  // Student/Parent view - read-only results from dataStore
+  const studentId = "001"; // This would come from authenticated user
+  const studentClass = "Std 8"; // This would come from student profile
+  const [studentResults, setStudentResults] = useState<Record<string, number> | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Listen for updates from teachers
+  useEffect(() => {
+    const handleUpdate = () => {
+      setRefreshKey(prev => prev + 1);
+    };
+    
+    window.addEventListener('examResultsUpdated', handleUpdate);
+    return () => window.removeEventListener('examResultsUpdated', handleUpdate);
+  }, []);
+
+  // Load student results
+  useEffect(() => {
+    const results = examResultsAPI.getResultsByStudent(studentClass, selectedTerm, studentId);
+    setStudentResults(results);
+  }, [selectedTerm, refreshKey]);
   return (
     <div>
       <h1 className="text-3xl mb-6">{role === "parent" ? "Student Results" : "My Results"}</h1>
