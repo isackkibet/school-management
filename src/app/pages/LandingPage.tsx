@@ -135,10 +135,34 @@ export default function LandingPage() {
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-950/95 via-emerald-900/60 to-transparent" />
         </motion.div>
 
-        {/* Floating Geometric Shapes */}
-        <div className="absolute inset-0 pointer-events-none">
-           <motion.div animate={{ y: [0, 40, 0], rotate: 360 }} transition={{ duration: 20, repeat: Infinity, ease: "linear" }} className="absolute top-1/4 right-1/4 w-32 h-32 bg-amber-400/10 rounded-full blur-3xl" />
-           <motion.div animate={{ x: [0, 30, 0] }} transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }} className="absolute bottom-1/4 left-1/4 w-64 h-64 bg-emerald-500/10 rounded-full blur-[100px]" />
+        {/* Floating Interactive Background Elements */}
+        <div className="absolute inset-0 pointer-events-none overflow-hidden h-full w-full">
+           <motion.div 
+             animate={{ 
+               y: [0, -40, 0],
+               x: [0, 30, 0],
+               scale: [1, 1.2, 1]
+             }} 
+             transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }} 
+             className="absolute top-[10%] left-[5%] w-[40rem] h-[40rem] bg-emerald-500/10 rounded-full blur-[120px]" 
+           />
+           <motion.div 
+             animate={{ 
+               y: [0, 50, 0],
+               x: [0, -30, 0],
+               scale: [1, 1.1, 1]
+             }} 
+             transition={{ duration: 20, repeat: Infinity, ease: "easeInOut", delay: 2 }} 
+             className="absolute bottom-[20%] right-[10%] w-[35rem] h-[35rem] bg-amber-400/10 rounded-full blur-[100px]" 
+           />
+           <motion.div 
+             animate={{ 
+               rotate: 360,
+               scale: [1, 1.3, 1]
+             }} 
+             transition={{ duration: 30, repeat: Infinity, ease: "linear" }} 
+             className="absolute top-1/2 left-1/3 w-[20rem] h-[20rem] bg-indigo-500/5 rounded-full blur-[80px]" 
+           />
         </div>
 
         <div className="container mx-auto px-6 relative z-10 pt-20">
@@ -294,28 +318,28 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-3 gap-10">
             {[
               { 
+                tag: "Sports", 
+                date: "Apr 28, 2026",
+                title: "Annual Athletics Mastery", 
+                desc: "Our champions secured the first position in the Nandi County Inter-School Games with a record-breaking performance.",
+                icon: Award,
+                img: "/images/athletics_group.jpeg"
+              },
+              { 
                 tag: "Academic", 
-                date: "Apr 24, 2026",
-                title: "CBC JSS Transition Strategy", 
-                desc: "We are expanding our facilities to accommodate the next wave of Junior Secondary School learners.",
-                icon: BookMarked,
-                img: "/images/hero_kenyan_students_1775937217321.png"
+                date: "May 02, 2026",
+                title: "Excellence in Action", 
+                desc: "Celebrating our top performers who have demonstrated outstanding discipline and academic growth this term.",
+                icon: BookOpen,
+                img: "/images/athletics_podium.jpeg"
               },
               { 
                 tag: "Community", 
-                date: "May 02, 2026",
-                title: "Grand Alumni Re-union", 
-                desc: "Celebrating 10 years of leadership and discipline with our esteemed past students.",
-                icon: Users,
-                img: "/images/school_sports_1775937447876.png"
-              },
-              { 
-                tag: "Innovation", 
                 date: "Jun 15, 2026",
-                title: "New ICT Hub Opening", 
-                desc: "Equipping every student with AI-ready skillsets through our brand new digital learning centers.",
-                icon: Sparkles,
-                img: "/images/cbc_classroom_1775937350004.png"
+                title: "Regional Sports Day", 
+                desc: "Witness the spirit of competition and teamwork at our upcoming regional sports event held at the school grounds.",
+                icon: Users,
+                img: "/images/athletics_other.jpeg"
               }
             ].map((news, i) => (
               <motion.div 
@@ -398,7 +422,18 @@ export default function LandingPage() {
                      <p className="text-xl text-emerald-50 max-w-lg font-medium opacity-80">Join our next intake. Applications for the 2026 Academic Year are now being processed with priority indexing.</p>
                      <div className="flex flex-wrap gap-4 justify-center lg:justify-start">
                         <Button className="bg-amber-500 hover:bg-amber-600 text-emerald-950 font-black h-20 px-12 rounded-3xl text-xl shadow-2xl active:scale-95 transition-all">Start Application</Button>
-                        <Button variant="outline" className="h-20 px-12 rounded-3xl text-xl font-black border-white/20 text-white hover:bg-white/10 backdrop-blur-sm">View Fee Structure</Button>
+                         <Button 
+                           variant="outline" 
+                           className="h-20 px-12 rounded-3xl text-xl font-black border-white/20 text-white hover:bg-white/10 backdrop-blur-sm"
+                           onClick={() => {
+                             const link = document.createElement('a');
+                             link.href = '/school_fees_2026.txt';
+                             link.download = 'Kipsirwo_Primary_Fees_2026.txt';
+                             link.click();
+                           }}
+                         >
+                           Download Fee Structure
+                         </Button>
                      </div>
                   </div>
                   <div className="lg:w-1/2 w-full max-w-md">
@@ -449,7 +484,12 @@ export default function LandingPage() {
             <div>
                <h4 className="text-lg font-black uppercase tracking-widest mb-10 text-amber-500">The School</h4>
                <ul className="space-y-5 text-slate-400 font-bold">
-                  {["Academic Calendar", "Our History", "Curriculum Guide", "Sports & Arts", "School Bus Routes"].map(item => (
+                  <li className="hover:text-white transition-colors cursor-pointer flex items-center justify-center lg:justify-start gap-2">
+                    <a href="/school_calendar_2026.txt" download="Kipsirwo_Calendar_2026.txt" className="flex items-center gap-2">
+                      <ArrowRight className="w-3 h-3 text-emerald-600" /> Academic Calendar
+                    </a>
+                  </li>
+                  {["Our History", "Curriculum Guide", "Sports & Arts", "School Bus Routes"].map(item => (
                     <li key={item} className="hover:text-white transition-colors cursor-pointer flex items-center justify-center lg:justify-start gap-2">
                        <ArrowRight className="w-3 h-3 text-emerald-600" /> {item}
                     </li>
