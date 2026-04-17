@@ -1,6 +1,6 @@
 import { Outlet, useNavigate, useLocation } from "react-router";
 import { Button } from "../components/ui/button";
-import { GraduationCap, Users, ClipboardCheck, BookOpen, DollarSign, LogOut } from "lucide-react";
+import { GraduationCap, Users, ClipboardCheck, BookOpen, DollarSign, LogOut, Award, Heart } from "lucide-react";
 
 export default function DashboardLayout() {
   const navigate = useNavigate();
@@ -16,9 +16,11 @@ export default function DashboardLayout() {
   const getNavItems = () => {
     const allItems = [
       { path: "/dashboard", label: "Dashboard", icon: GraduationCap, roles: ["admin", "teacher", "student", "parent", "accountant"] },
+      { path: "/dashboard/parent-portal", label: "Parent Portal", icon: Heart, roles: ["admin", "parent"] },
+      { path: "/dashboard/staff-portal", label: "Staff Portal", icon: BookOpen, roles: ["admin", "teacher"] },
       { path: "/dashboard/students", label: "Students", icon: Users, roles: ["admin", "teacher"] },
       { path: "/dashboard/attendance", label: "Attendance", icon: ClipboardCheck, roles: ["admin", "teacher"] },
-      { path: "/dashboard/exams", label: "Exams & Results", icon: BookOpen, roles: ["admin", "teacher", "student", "parent"] },
+      { path: "/dashboard/exams", label: "Exams & Results", icon: Award, roles: ["admin", "teacher", "student", "parent"] },
       { path: "/dashboard/fees", label: "Fees", icon: DollarSign, roles: ["admin", "accountant", "student", "parent"] },
     ];
 

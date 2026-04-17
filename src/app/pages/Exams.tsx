@@ -213,8 +213,10 @@ export default function Exams() {
   }
 
   // Student/Parent view - read-only results from dataStore
-  const studentId = "001"; // This would come from authenticated user
-  const studentClass = "Std 8"; // This would come from student profile
+  const loggedInAdmNo = localStorage.getItem("studentID") || "KPS001";
+  const student = studentAPI.getAllStudents().find(s => s.admissionNo === loggedInAdmNo) || studentAPI.getAllStudents()[0];
+  const studentId = student.id;
+  const studentClass = student.class;
   const [studentResults, setStudentResults] = useState<Record<string, number> | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -233,6 +235,9 @@ export default function Exams() {
     const results = examResultsAPI.getResultsByStudent(studentClass, selectedTerm, studentId);
     setStudentResults(results);
   }, [selectedTerm, refreshKey]);
+  const averageMarks = examResultsAPI.getStudentAverage(studentClass, selectedTerm, studentId);
+  const overallGrade = examResultsAPI.getStudentGrade(studentClass, selectedTerm, studentId);
+
   return (
     <div>
       <h1 className="text-3xl mb-6">{role === "parent" ? "Student Results" : "My Results"}</h1>
@@ -282,15 +287,15 @@ export default function Exams() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <p className="text-sm text-gray-500">Name</p>
-              <p className="font-semibold">Brian Kiprop</p>
+              <p className="font-semibold">{student.name}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Admission No</p>
-              <p className="font-semibold">KPS001</p>
+              <p className="font-semibold">{student.admissionNo}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Class</p>
-              <p className="font-semibold">Std 8</p>
+              <p className="font-semibold">{student.class}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Term</p>
@@ -312,26 +317,27 @@ export default function Exams() {
           </TableHeader>
           <TableBody>
             {subjects.map((subject, idx) => {
-              const mockMark = Math.floor(Math.random() * 40) + 60;
-              const grade = getGrade(mockMark);
-              const remarks = mockMark >= 80 ? "Excellent" : mockMark >= 70 ? "Very Good" : mockMark >= 60 ? "Good" : mockMark >= 50 ? "Satisfactory" : "Needs Improvement";
+              const mark = studentResults ? studentResults[subject] : 0;
+              const grade = getGrade(mark);
+              const remarks = mark >= 80 ? "Excellent" : mark >= 70 ? "Very Good" : mark >= 60 ? "Good" : mark >= 50 ? "Satisfactory" : mark > 0 ? "Needs Improvement" : "-";
 
               return (
                 <TableRow key={idx}>
                   <TableCell className="font-semibold">{subject}</TableCell>
                   <TableCell>
-                    <span className="text-lg font-bold">{mockMark}</span>
+                    <span className={`text-lg font-bold ${mark > 0 ? '' : 'text-gray-300'}`}>{mark || '-'}</span>
                     <span className="text-gray-500 text-sm">/100</span>
                   </TableCell>
                   <TableCell>
                     <span className={`px-3 py-1 rounded-full text-sm font-bold ${
+                      mark === 0 ? "bg-gray-100 text-gray-400" :
                       grade === "A" ? "bg-green-100 text-green-800" :
                       grade === "B" ? "bg-blue-100 text-blue-800" :
                       grade === "C" ? "bg-yellow-100 text-yellow-800" :
                       grade === "D" ? "bg-orange-100 text-orange-800" :
                       "bg-red-100 text-red-800"
                     }`}>
-                      {grade}
+                      {mark > 0 ? grade : "-"}
                     </span>
                   </TableCell>
                   <TableCell className="text-sm">{remarks}</TableCell>
@@ -350,15 +356,15 @@ export default function Exams() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="text-center">
               <p className="text-sm text-gray-500 mb-1">Average Marks</p>
-              <p className="text-3xl font-bold text-green-700">75</p>
+              <p className="text-3xl font-bold text-green-700">{averageMarks || '-'}</p>
             </div>
             <div className="text-center">
               <p className="text-sm text-gray-500 mb-1">Overall Grade</p>
-              <p className="text-3xl font-bold text-blue-700">B</p>
+              <p className="text-3xl font-bold text-blue-700">{overallGrade || '-'}</p>
             </div>
             <div className="text-center">
               <p className="text-sm text-gray-500 mb-1">Class Position</p>
-              <p className="text-3xl font-bold text-purple-700">5/42</p>
+              <p className="text-3xl font-bold text-purple-700">--</p>
             </div>
           </div>
         </CardContent>

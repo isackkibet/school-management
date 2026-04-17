@@ -1,13 +1,16 @@
+import { useNavigate } from "react-router";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Button } from "../components/ui/button";
 import { 
   Users, UserCheck, DollarSign, AlertCircle, BookOpen, TrendingUp, Bell, ChevronRight, 
   BrainCircuit, Wand2, CalendarClock, BookA, Medal, Star, BookMarked, MonitorPlay, 
   MessageSquare, Gamepad2, FileText, CheckCircle2, ClipboardCheck, Edit3, Send, Files,
-  Users2, HelpCircle, FileBarChart, PenTool
+  Users2, HelpCircle, FileBarChart, PenTool, Heart, Phone, Calendar
 } from "lucide-react";
 import { Badge } from "../components/ui/badge";
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   const role = localStorage.getItem("userRole") || "student";
 
   const getRoleTitle = () => {
@@ -35,7 +38,11 @@ export default function AdminDashboard() {
               <h2 className="text-3xl font-extrabold mb-2 tracking-tight">
                 Welcome back to <span className="text-amber-400">{getRoleTitle()}</span>
               </h2>
-              <p className="text-indigo-100/90 text-lg font-medium">Manage your classroom, lesson plans, and assignments with ease.</p>
+              <p className="text-indigo-100/90 text-lg font-medium leading-relaxed">
+                Log in to your teacher dashboard to: <span className="text-amber-300 font-bold">add grades</span>, post learning resources, 
+                share class announcements, upload lesson plans, showcase student achievements, and 
+                update grading policies — <span className="italic">all in one place.</span>
+              </p>
             </div>
             <div className="hidden md:block">
               <div className="bg-black/20 backdrop-blur-md border border-white/10 rounded-xl px-8 py-5 shadow-inner text-center">
@@ -52,7 +59,10 @@ export default function AdminDashboard() {
             <TrendingUp className="w-5 h-5 text-indigo-600" /> Daily Quick Actions
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white cursor-pointer group">
+            <Card 
+              onClick={() => navigate("/dashboard/attendance")}
+              className="border-none shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white cursor-pointer group"
+            >
               <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-4">
                 <div className="bg-blue-50 p-4 rounded-full group-hover:scale-110 transition-transform">
                   <ClipboardCheck className="w-8 h-8 text-blue-600" />
@@ -88,7 +98,10 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
 
-            <Card className="border-none shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white cursor-pointer group">
+            <Card 
+              onClick={() => navigate("/dashboard/staff-portal")}
+              className="border-none shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white cursor-pointer group"
+            >
               <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-4">
                 <div className="bg-amber-50 p-4 rounded-full group-hover:scale-110 transition-transform">
                   <PenTool className="w-8 h-8 text-amber-600" />
@@ -96,6 +109,21 @@ export default function AdminDashboard() {
                 <div>
                   <h4 className="font-bold text-slate-800">Enter Grades</h4>
                   <p className="text-xs text-slate-500 mt-1 font-medium">Feedback & Levels</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card 
+              onClick={() => navigate("/dashboard/timetable-generator")}
+              className="border-none shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 bg-white cursor-pointer group"
+            >
+              <CardContent className="p-6 flex flex-col items-center justify-center text-center space-y-4">
+                <div className="bg-rose-50 p-4 rounded-full group-hover:scale-110 transition-transform">
+                  <Calendar className="w-8 h-8 text-rose-600" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-800">Generate Timetable</h4>
+                  <p className="text-xs text-slate-500 mt-1 font-medium">Smart Scheduling</p>
                 </div>
               </CardContent>
             </Card>
@@ -197,9 +225,50 @@ export default function AdminDashboard() {
             <h2 className="text-3xl font-extrabold mb-2 tracking-tight">
               Welcome to the <span className="text-amber-400">{getRoleTitle()}!</span>
             </h2>
-            <p className="text-blue-100/90 text-lg font-medium">Ready to learn and grow today? You have 2 assignments pending.</p>
+            <p className="text-blue-100/90 text-lg font-medium">
+              {role === 'parent' ? "Stay informed about school progress, upcoming meetings, and teacher updates." : "Ready to learn and grow today? You have 2 assignments pending."}
+            </p>
           </div>
         </div>
+
+        {role === 'parent' && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card 
+              onClick={() => navigate("/dashboard/parent-portal")}
+              className="md:col-span-2 border-none shadow-xl bg-gradient-to-br from-indigo-800 to-indigo-950 text-white overflow-hidden relative cursor-pointer group"
+            >
+              <div className="absolute top-0 right-0 -mt-8 -mr-8 h-32 w-32 rounded-full bg-white/10 blur-2xl group-hover:scale-110 transition-transform" />
+              <CardContent className="p-8 flex items-center justify-between">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <div className="bg-white/20 p-2 rounded-lg"><Heart className="w-6 h-6 text-amber-400" /></div>
+                    <h3 className="text-2xl font-black">Go to Parent Portal</h3>
+                  </div>
+                  <p className="text-indigo-100 font-medium max-w-md leading-relaxed">
+                    Access teacher contacts, meeting dates, school development news, and important notices — all in one place.
+                  </p>
+                  <Button variant="secondary" className="bg-white text-indigo-900 font-bold border-none hover:bg-white/90">
+                    Open Portal <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                </div>
+                <div className="hidden lg:block opacity-20 group-hover:opacity-30 transition-opacity">
+                  <Users className="w-32 h-32" />
+                </div>
+              </CardContent>
+            </Card>
+            
+            <Card className="border-none shadow-md bg-white p-2">
+              <CardContent className="p-6 flex flex-col items-center text-center space-y-3">
+                <div className="bg-green-100 p-4 rounded-full"><Phone className="w-8 h-8 text-green-700" /></div>
+                <div>
+                  <h4 className="font-bold text-slate-800">Need Help?</h4>
+                  <p className="text-xs text-slate-500 font-medium">Contact the school administration directly.</p>
+                </div>
+                <Button variant="outline" className="w-full font-bold border-slate-200">Call Office</Button>
+              </CardContent>
+            </Card>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card className="border-none shadow-md hover:shadow-xl transition-transform hover:-translate-y-1 bg-white">
