@@ -15,6 +15,17 @@ type LoginPayload = {
   token: string;
 };
 
+export type RegisterPayload = {
+  email: string;
+  password: string;
+  firstName: string;
+  lastName: string;
+  role: string;
+  phone?: string;
+  address?: string;
+  gender?: string | null;
+};
+
 const TOKEN_KEY = "authToken";
 const USER_KEY = "authUser";
 const ROLE_KEY = "userRole";
@@ -85,6 +96,20 @@ export async function loginWithEmail(email: string, password: string) {
   return response.data;
 }
 
+export async function registerAccount(payload: RegisterPayload) {
+  const response = await apiRequest<LoginPayload>("/auth/register", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.data?.token || !response.data.user) {
+    throw new Error("Account created but the server response was incomplete.");
+  }
+
+  saveAuthSession(response.data.user, response.data.token);
+  return response.data;
+}
+
 export async function fetchCurrentUser(token = getAuthToken()) {
   if (!token) throw new Error("Please sign in to continue.");
 
@@ -94,4 +119,3 @@ export async function fetchCurrentUser(token = getAuthToken()) {
   saveAuthSession(response.data, token);
   return response.data;
 }
-
