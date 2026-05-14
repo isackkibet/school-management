@@ -85,6 +85,11 @@ export default function LandingPage() {
                 Portal Login
               </Button>
             </Link>
+            <Link to="/signup">
+              <Button variant="outline" className="border-white/30 bg-white/10 text-white hover:bg-white hover:text-emerald-950 font-black px-6 py-6 rounded-2xl">
+                Sign Up
+              </Button>
+            </Link>
           </nav>
 
           <button className={`lg:hidden p-2 rounded-xl border transition-colors ${
@@ -118,6 +123,9 @@ export default function LandingPage() {
             <div className="mt-auto">
                <Link to="/login" onClick={() => setIsMenuOpen(false)}>
                   <Button className="w-full bg-amber-500 text-emerald-900 font-black py-8 text-xl rounded-3xl">Portal Login</Button>
+               </Link>
+               <Link to="/signup" onClick={() => setIsMenuOpen(false)}>
+                  <Button variant="outline" className="mt-4 w-full border-white/20 text-white hover:bg-white/10 font-black py-8 text-xl rounded-3xl">Create Account</Button>
                </Link>
             </div>
           </motion.div>
@@ -202,9 +210,14 @@ export default function LandingPage() {
               transition={{ delay: 0.8 }}
               className="flex flex-col sm:flex-row gap-6 pt-6"
             >
-              <Button className="bg-amber-500 hover:bg-amber-600 text-emerald-950 font-black h-20 px-12 rounded-3xl text-xl shadow-2xl shadow-amber-500/30 group">
+               <Button className="bg-amber-500 hover:bg-amber-600 text-emerald-950 font-black h-20 px-12 rounded-3xl text-xl shadow-2xl shadow-amber-500/30 group">
                 Apply for 2026 <ArrowRight className="ml-3 group-hover:translate-x-2 transition-transform h-6 w-6" />
               </Button>
+              <Link to="/signup">
+                <Button className="bg-white text-emerald-950 hover:bg-emerald-50 h-20 px-12 rounded-3xl text-xl font-black">
+                  Create Portal Account
+                </Button>
+              </Link>
               <Button variant="outline" className="h-20 px-12 rounded-3xl text-xl font-black border-2 border-white/30 text-white hover:bg-white hover:text-emerald-950 backdrop-blur-sm transition-all duration-300">
                 Explore Curriculum
               </Button>

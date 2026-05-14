@@ -38,6 +38,8 @@ export function roleToPortalRole(role?: string) {
       return "admin";
     case "TEACHER":
       return "teacher";
+    case "ACCOUNTANT":
+      return "accountant";
     case "PARENT":
       return "parent";
     case "STUDENT":

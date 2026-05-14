@@ -1,6 +1,6 @@
 import { type FormEvent, type ReactNode, useState } from "react";
 import { Link, useNavigate } from "react-router";
-import { AlertCircle, ArrowRight, Brain, CheckCircle2, GraduationCap, Heart, Lock, Mail, Phone, ShieldCheck, User } from "lucide-react";
+import { AlertCircle, ArrowRight, Brain, CheckCircle2, DollarSign, GraduationCap, Heart, Lock, Mail, Phone, ShieldCheck, User } from "lucide-react";
 import { type LucideIcon } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
@@ -13,6 +13,7 @@ import { fetchCurrentUser, registerAccount } from "../lib/auth";
 const roleOptions = [
   { value: "SUPER_ADMIN", label: "Institution Admin", icon: ShieldCheck },
   { value: "TEACHER", label: "Educator Hub", icon: Brain },
+  { value: "ACCOUNTANT", label: "Finance Office", icon: DollarSign },
   { value: "PARENT", label: "Parent Portal", icon: Heart },
   { value: "STUDENT", label: "Learner Center", icon: GraduationCap },
 ];
@@ -216,4 +217,3 @@ function Field({ label, icon: Icon, children }: { label: string; icon: LucideIco
     </div>
   );
 }
-
