@@ -11,7 +11,7 @@
     "prisma:push": "prisma db push",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "node prisma/seed.js",
-    "build": "webpack --mode production"
+    "build": "npx prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",
