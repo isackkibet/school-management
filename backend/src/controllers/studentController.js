@@ -1,27 +1,78 @@
 import prisma from '../config/database.js'
 import { AppError } from '../middleware/errorHandler.js'
 import { paginate, generateStudentId } from '../utils/helpers.js'
+import bcrypt from 'bcryptjs'
 
 export const createStudent = async (req, res, next) => {
   try {
-    const { userId, classId, guardianName, guardianPhone } = req.body
-
-    const user = await prisma.user.findUnique({ where: { id: userId } })
-    if (!user) throw new AppError('User not found.', 404)
-    if (user.role !== 'STUDENT') throw new AppError('User must have STUDENT role.', 400)
-
-    const already = await prisma.studentProfile.findUnique({ where: { userId } })
-    if (already) throw new AppError('Student profile already exists.', 409)
+    const {
+      userId,
+      email,
+      password,
+      firstName,
+      lastName,
+      phone,
+      address,
+      dateOfBirth,
+      gender,
+      studentId,
+      classId,
+      guardianName,
+      guardianPhone,
+    } = req.body
 
     const classData = await prisma.class.findUnique({ where: { id: classId } })
     if (!classData) throw new AppError('Class not found.', 404)
 
     const count = await prisma.studentProfile.count()
-    const studentId = generateStudentId(classData.name.slice(0, 3).toUpperCase(), count + 1)
+    const admissionNumber = studentId || generateStudentId(classData.name.slice(0, 3).toUpperCase(), count + 1)
 
-    const student = await prisma.studentProfile.create({
-      data: { userId, studentId, classId, guardianName, guardianPhone },
-      include: { user: { select: { id: true, firstName: true, lastName: true, email: true, gender: true } }, class: true },
+    const student = await prisma.$transaction(async (tx) => {
+      let studentUser
+
+      if (userId) {
+        studentUser = await tx.user.findUnique({ where: { id: userId } })
+        if (!studentUser) throw new AppError('User not found.', 404)
+        if (studentUser.role !== 'STUDENT') throw new AppError('User must have STUDENT role.', 400)
+
+        const already = await tx.studentProfile.findUnique({ where: { userId } })
+        if (already) throw new AppError('Student profile already exists.', 409)
+      } else {
+        const exists = await tx.user.findUnique({ where: { email } })
+        if (exists) throw new AppError('Email already taken.', 409)
+
+        studentUser = await tx.user.create({
+          data: {
+            email,
+            password: await bcrypt.hash(password || 'student123', 12),
+            role: 'STUDENT',
+            firstName,
+            lastName,
+            phone,
+            address,
+            dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+            gender,
+          },
+        })
+      }
+
+      const admissionTaken = await tx.studentProfile.findUnique({ where: { studentId: admissionNumber } })
+      if (admissionTaken) throw new AppError('Admission number already exists.', 409)
+
+      return tx.studentProfile.create({
+        data: {
+          userId: studentUser.id,
+          studentId: admissionNumber,
+          classId,
+          guardianName,
+          guardianPhone,
+        },
+        include: {
+          user: { select: { id: true, firstName: true, lastName: true, email: true, phone: true, gender: true } },
+          class: true,
+          feePayments: { include: { fee: true } },
+        },
+      })
     })
 
     res.status(201).json({ success: true, data: student })
@@ -53,6 +104,7 @@ export const getAllStudents = async (req, res, next) => {
         include: {
           user: { select: { id: true, firstName: true, lastName: true, email: true, phone: true, gender: true, isActive: true } },
           class: true,
+          feePayments: { include: { fee: true } },
           _count: { select: { attendance: true, examResults: true, feePayments: true } },
         },
         orderBy: { createdAt: 'desc' },
