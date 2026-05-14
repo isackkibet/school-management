@@ -19,6 +19,8 @@ export type StudentRecord = {
     lastName: string;
     email: string;
     phone?: string | null;
+    address?: string | null;
+    dateOfBirth?: string | null;
     gender?: string | null;
   };
   class: SchoolClass;
@@ -39,6 +41,8 @@ export type CreateStudentPayload = {
   guardianName?: string;
   guardianPhone?: string;
 };
+
+export type UpdateStudentPayload = Partial<Omit<CreateStudentPayload, "email" | "password" | "studentId">>;
 
 export async function fetchStudents(search = "", token = getAuthToken()) {
   if (!token) throw new Error("Please sign in to load students.");
@@ -69,10 +73,31 @@ export async function createStudent(payload: CreateStudentPayload, token = getAu
   return response.data;
 }
 
+export async function updateStudent(id: string, payload: UpdateStudentPayload, token = getAuthToken()) {
+  if (!token) throw new Error("Please sign in to update students.");
+
+  const response = await apiRequest<StudentRecord>(`/students/${id}`, {
+    method: "PATCH",
+    token,
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.data) throw new Error("The server did not return the updated student.");
+  return response.data;
+}
+
+export async function deleteStudent(id: string, token = getAuthToken()) {
+  if (!token) throw new Error("Please sign in to delete students.");
+
+  await apiRequest<{ message?: string }>(`/students/${id}`, {
+    method: "DELETE",
+    token,
+  });
+}
+
 export function getStudentBalance(student: StudentRecord) {
   return (student.feePayments || []).reduce((total, payment) => {
     const feeAmount = payment.fee?.amount || 0;
     return total + Math.max(feeAmount - payment.amountPaid, 0);
   }, 0);
 }
-

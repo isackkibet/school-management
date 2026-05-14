@@ -68,7 +68,7 @@ export const createStudent = async (req, res, next) => {
           guardianPhone,
         },
         include: {
-          user: { select: { id: true, firstName: true, lastName: true, email: true, phone: true, gender: true } },
+          user: { select: { id: true, firstName: true, lastName: true, email: true, phone: true, address: true, dateOfBirth: true, gender: true } },
           class: true,
           feePayments: { include: { fee: true } },
         },
@@ -102,7 +102,7 @@ export const getAllStudents = async (req, res, next) => {
         skip,
         take,
         include: {
-          user: { select: { id: true, firstName: true, lastName: true, email: true, phone: true, gender: true, isActive: true } },
+          user: { select: { id: true, firstName: true, lastName: true, email: true, phone: true, address: true, dateOfBirth: true, gender: true, isActive: true } },
           class: true,
           feePayments: { include: { fee: true } },
           _count: { select: { attendance: true, examResults: true, feePayments: true } },
@@ -185,7 +185,7 @@ export const updateStudent = async (req, res, next) => {
           ...(guardianPhone !== undefined && { guardianPhone }),
         },
         include: {
-          user: { select: { id: true, firstName: true, lastName: true, email: true, phone: true, gender: true, isActive: true } },
+          user: { select: { id: true, firstName: true, lastName: true, email: true, phone: true, address: true, dateOfBirth: true, gender: true, isActive: true } },
           class: true,
           feePayments: { include: { fee: true } },
           _count: { select: { attendance: true, examResults: true, feePayments: true } },

@@ -1,5 +1,5 @@
 import { type FormEvent, type ReactNode, useEffect, useMemo, useState } from "react";
-import { AlertCircle, CheckCircle2, Download, Edit, Eye, Mail, Plus, Search, Users } from "lucide-react";
+import { AlertCircle, CheckCircle2, Download, Edit, Eye, Mail, Plus, Search, Trash2, Users } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../components/ui/table";
@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Badge } from "../components/ui/badge";
 import { ApiError } from "../lib/api";
 import { getStoredUser, roleToPortalRole } from "../lib/auth";
-import { createStudent, fetchClasses, fetchStudents, getStudentBalance, type SchoolClass, type StudentRecord } from "../lib/students";
+import { createStudent, deleteStudent, fetchClasses, fetchStudents, getStudentBalance, updateStudent, type SchoolClass, type StudentRecord } from "../lib/students";
 
 const initialForm = {
   studentId: "",
@@ -38,6 +38,12 @@ export default function Students() {
   const [success, setSuccess] = useState("");
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
+  const [selectedStudent, setSelectedStudent] = useState<StudentRecord | null>(null);
+  const [viewOpen, setViewOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editForm, setEditForm] = useState(initialForm);
+  const [editError, setEditError] = useState("");
+  const [editSuccess, setEditSuccess] = useState("");
   const canRegisterStudents = roleToPortalRole(getStoredUser()?.role) === "admin";
 
   const loadData = async () => {
