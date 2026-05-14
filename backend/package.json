@@ -11,8 +11,7 @@
     "prisma:push": "prisma db push",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "node prisma/seed.js",
-      "build": "webpack --mode production" 
-
+    "build": "webpack --mode production"
   },
   "dependencies": {
     "@prisma/client": "^6.6.0",
@@ -24,7 +23,8 @@
     "helmet": "^8.0.0",
     "joi": "^17.13.3",
     "jsonwebtoken": "^9.0.2",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "multer": "^2.1.1"
   },
   "devDependencies": {
     "nodemon": "^3.1.9",
