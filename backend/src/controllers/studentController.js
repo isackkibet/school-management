@@ -107,7 +107,7 @@ export const getAllStudents = async (req, res, next) => {
           feePayments: { include: { fee: true } },
           _count: { select: { attendance: true, examResults: true, feePayments: true } },
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { enrollmentDate: 'desc' },
       }),
       prisma.studentProfile.count({ where }),
     ])
