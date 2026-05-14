@@ -10,12 +10,19 @@ import { errorHandler } from './middleware/errorHandler.js'
 
 const app = express()
 const PORT = process.env.PORT || 5000
+const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173'
 
 app.use(helmet())
-app.use(cors({ origin: process.env.CORS_ORIGIN || '*', credentials: true }))
-app.use(morgan('dev'))
+app.use(cors({ origin: corsOrigin, credentials: true }))
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
+morgan.token('body', (req) => {
+  if (!req.body || Object.keys(req.body).length === 0) return ''
+  const safeBody = { ...req.body }
+  if (safeBody.password) safeBody.password = '[REDACTED]'
+  return JSON.stringify(safeBody)
+})
+app.use(morgan(':method :url :status :response-time ms - :res[content-length] bytes :body'))
 
 // rate limiting — keep the api safe
 const limiter = rateLimit({
@@ -27,18 +34,24 @@ app.use('/api', limiter)
 
 app.use('/api', routes)
 
-app.get("/health", (req,res)=>{
-  res.status(200).json({success:true, message:"Server is live"})
-})
-
 // health check
 app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() })
+  res.json({ success: true, status: 'ok', timestamp: new Date().toISOString() })
 })
 
 // FIXME: cleanup error middleware
 app.use(errorHandler)
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`)
+})
+
+server.on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use. Stop the existing server or set PORT to another value.`)
+    process.exit(1)
+  }
+
+  console.error('Server failed to start:', error)
+  process.exit(1)
 })

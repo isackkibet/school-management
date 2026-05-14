@@ -1,15 +1,54 @@
 import { Outlet, useNavigate, useLocation } from "react-router";
 import { Button } from "../components/ui/button";
-import { GraduationCap, Users, ClipboardCheck, BookOpen, DollarSign, LogOut, Award, Heart } from "lucide-react";
+import { GraduationCap, Users, ClipboardCheck, BookOpen, DollarSign, LogOut, Award, Heart, AlertCircle } from "lucide-react";
+import { useEffect, useState } from "react";
+import { AuthUser, clearAuthSession, fetchCurrentUser, getAuthToken, getStoredUser, roleToPortalRole } from "../lib/auth";
 
 export default function DashboardLayout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const role = localStorage.getItem("userRole") || "admin";
+  const [user, setUser] = useState<AuthUser | null>(() => getStoredUser());
+  const [role, setRole] = useState(() => localStorage.getItem("userRole") || roleToPortalRole(getStoredUser()?.role));
+  const [authStatus, setAuthStatus] = useState<"checking" | "ready" | "error">("checking");
+  const [authMessage, setAuthMessage] = useState("Checking your session...");
+
+  useEffect(() => {
+    let active = true;
+
+    const verifySession = async () => {
+      const token = getAuthToken();
+      if (!token) {
+        clearAuthSession();
+        navigate("/login");
+        return;
+      }
+
+      try {
+        const currentUser = await fetchCurrentUser(token);
+        if (!active) return;
+        setUser(currentUser);
+        setRole(roleToPortalRole(currentUser.role));
+        setAuthStatus("ready");
+        setAuthMessage("");
+      } catch (error) {
+        if (!active) return;
+        clearAuthSession();
+        setAuthStatus("error");
+        setAuthMessage(error instanceof Error ? error.message : "Your session could not be verified.");
+        window.setTimeout(() => navigate("/login"), 1200);
+      }
+    };
+
+    verifySession();
+
+    return () => {
+      active = false;
+    };
+  }, [navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem("userRole");
-    navigate("/");
+    clearAuthSession();
+    navigate("/login");
   };
 
   // Role-based navigation items
@@ -29,6 +68,23 @@ export default function DashboardLayout() {
 
   const navItems = getNavItems();
 
+  if (authStatus !== "ready") {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-6">
+        <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="flex items-center gap-3 text-emerald-800">
+            {authStatus === "checking" ? (
+              <div className="h-5 w-5 border-2 border-emerald-700 border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <AlertCircle className="h-5 w-5 text-rose-600" />
+            )}
+            <p className="font-bold">{authMessage}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       <header className="bg-gradient-to-r from-green-700 to-green-600 text-white px-6 py-4 shadow-lg">
@@ -44,7 +100,9 @@ export default function DashboardLayout() {
           </div>
           <div className="flex items-center gap-4">
             <div className="bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2">
-              <span className="text-sm font-medium capitalize">{role}</span>
+              <span className="text-sm font-medium capitalize">
+                {user ? `${user.firstName} ${user.lastName} - ${role}` : role}
+              </span>
             </div>
             <Button variant="ghost" size="sm" onClick={handleLogout} className="text-white hover:bg-white/20">
               <LogOut className="w-4 h-4 mr-2" />
