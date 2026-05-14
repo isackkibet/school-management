@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
 import prisma from '../config/database.js'
 import { AppError } from '../middleware/errorHandler.js'
+import { generateStudentId, generateTeacherId } from '../utils/helpers.js'
 
 const generateToken = (user) => jwt.sign(
   { id: user.id, email: user.email, role: user.role },
@@ -18,19 +19,44 @@ export const register = async (req, res, next) => {
 
     const hashed = await bcrypt.hash(password, 12)
 
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashed,
-        firstName,
-        lastName,
-        role,
-        phone,
-        address,
-        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
-        gender,
-      },
-      select: { id: true, email: true, role: true, firstName: true, lastName: true, createdAt: true },
+    const user = await prisma.$transaction(async (tx) => {
+      const newUser = await tx.user.create({
+        data: {
+          email,
+          password: hashed,
+          firstName,
+          lastName,
+          role,
+          phone,
+          address,
+          dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+          gender,
+        },
+        select: { id: true, email: true, role: true, firstName: true, lastName: true, createdAt: true },
+      })
+
+      if (role === 'STUDENT') {
+        const count = await tx.studentProfile.count()
+        const admissionNumber = generateStudentId('GEN', count + 1)
+        await tx.studentProfile.create({
+          data: {
+            userId: newUser.id,
+            studentId: admissionNumber,
+          },
+        })
+      }
+
+      if (role === 'TEACHER') {
+        const count = await tx.teacherProfile.count()
+        await tx.teacherProfile.create({
+          data: {
+            userId: newUser.id,
+            teacherId: generateTeacherId(count + 1),
+          },
+        })
+      }
+
+      return newUser
     })
 
     const token = generateToken(user)

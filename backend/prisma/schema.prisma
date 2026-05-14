@@ -36,13 +36,13 @@ model StudentProfile {
   id            String   @id @default(cuid())
   userId        String   @unique
   studentId     String   @unique
-  classId       String
+  classId       String?
   guardianName  String?
   guardianPhone String?
   enrollmentDate DateTime @default(now())
 
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  class Class @relation(fields: [classId], references: [id], onDelete: Restrict)
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  class Class? @relation(fields: [classId], references: [id], onDelete: SetNull)
 
   attendance  Attendance[]
   examResults ExamResult[]

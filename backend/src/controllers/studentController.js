@@ -201,10 +201,166 @@ export const updateStudent = async (req, res, next) => {
 
 export const deleteStudent = async (req, res, next) => {
   try {
-    await prisma.studentProfile.delete({ where: { id: req.params.id } })
-    res.json({ success: true, message: 'Student deleted.' })
+    const student = await prisma.studentProfile.findUnique({ where: { id: req.params.id } })
+    if (!student) throw new AppError('Student not found.', 404)
+
+    await prisma.$transaction(async (tx) => {
+      await tx.studentProfile.delete({ where: { id: req.params.id } })
+      await tx.user.update({
+        where: { id: student.userId },
+        data: { isActive: false },
+      })
+    })
+
+    res.json({ success: true, message: 'Student deleted and account deactivated.' })
   } catch (error) {
     if (error.code === 'P2025') return next(new AppError('Student not found.', 404))
+    next(error)
+  }
+}
+
+export const bulkCreateStudents = async (req, res, next) => {
+  try {
+    const { students } = req.body
+    if (!Array.isArray(students) || students.length === 0) {
+      throw new AppError('Provide a non-empty array of students.', 400)
+    }
+
+    const created = await prisma.$transaction(async (tx) => {
+      const results = []
+      for (const s of students) {
+        const {
+          email, password, firstName, lastName, phone, address,
+          dateOfBirth, gender, classId, studentId, guardianName, guardianPhone,
+        } = s
+
+        if (!email || !firstName || !lastName) {
+          throw new AppError(`Missing required fields for student: ${email || 'unknown'}`, 400)
+        }
+
+        const exists = await tx.user.findUnique({ where: { email } })
+        if (exists) throw new AppError(`Email ${email} already taken.`, 409)
+
+        if (classId) {
+          const c = await tx.class.findUnique({ where: { id: classId } })
+          if (!c) throw new AppError(`Class ${classId} not found for ${email}.`, 404)
+        }
+
+        const count = await tx.studentProfile.count()
+        const admissionNumber = studentId || generateStudentId('GEN', count + 1)
+
+        const admissionTaken = await tx.studentProfile.findUnique({ where: { studentId: admissionNumber } })
+        if (admissionTaken) throw new AppError(`Admission number ${admissionNumber} already exists.`, 409)
+
+        const newUser = await tx.user.create({
+          data: {
+            email,
+            password: await bcrypt.hash(password || 'student123', 12),
+            role: 'STUDENT',
+            firstName,
+            lastName,
+            phone,
+            address,
+            dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+            gender,
+          },
+        })
+
+        const profile = await tx.studentProfile.create({
+          data: {
+            userId: newUser.id,
+            studentId: admissionNumber,
+            ...(classId && { classId }),
+            guardianName,
+            guardianPhone,
+          },
+          include: {
+            user: { select: { id: true, firstName: true, lastName: true, email: true } },
+            class: true,
+          },
+        })
+
+        results.push(profile)
+      }
+      return results
+    })
+
+    res.status(201).json({ success: true, data: created, count: created.length })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const assignStudentClass = async (req, res, next) => {
+  try {
+    const { classId } = req.body
+
+    const c = await prisma.class.findUnique({ where: { id: classId } })
+    if (!c) throw new AppError('Class not found.', 404)
+
+    const student = await prisma.studentProfile.findUnique({ where: { id: req.params.id } })
+    if (!student) throw new AppError('Student not found.', 404)
+
+    const updated = await prisma.studentProfile.update({
+      where: { id: req.params.id },
+      data: { classId },
+      include: {
+        user: { select: { id: true, firstName: true, lastName: true, email: true } },
+        class: true,
+      },
+    })
+
+    res.json({ success: true, data: updated })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const toggleStudentStatus = async (req, res, next) => {
+  try {
+    const { isActive } = req.body
+
+    const student = await prisma.studentProfile.findUnique({ where: { id: req.params.id } })
+    if (!student) throw new AppError('Student not found.', 404)
+
+    const user = await prisma.user.update({
+      where: { id: student.userId },
+      data: { isActive },
+      select: { id: true, isActive: true },
+    })
+
+    res.json({ success: true, data: { userId: user.id, isActive: user.isActive } })
+  } catch (error) {
+    next(error)
+  }
+}
+
+export const getUnassignedStudents = async (req, res, next) => {
+  try {
+    const { page, limit } = req.query
+    const { skip, take } = paginate(page, limit)
+
+    const where = { classId: null }
+
+    const [students, total] = await Promise.all([
+      prisma.studentProfile.findMany({
+        where,
+        skip,
+        take,
+        include: {
+          user: { select: { id: true, firstName: true, lastName: true, email: true, phone: true, isActive: true } },
+        },
+        orderBy: { enrollmentDate: 'desc' },
+      }),
+      prisma.studentProfile.count({ where }),
+    ])
+
+    res.json({
+      success: true,
+      data: students,
+      pagination: { page: parseInt(page) || 1, limit: take, total, totalPages: Math.ceil(total / take) },
+    })
+  } catch (error) {
     next(error)
   }
 }
