@@ -144,26 +144,57 @@ export const getStudentById = async (req, res, next) => {
 
 export const updateStudent = async (req, res, next) => {
   try {
-    const { classId, guardianName, guardianPhone } = req.body
+    const {
+      classId,
+      firstName,
+      lastName,
+      phone,
+      address,
+      dateOfBirth,
+      gender,
+      guardianName,
+      guardianPhone,
+    } = req.body
 
     if (classId) {
       const c = await prisma.class.findUnique({ where: { id: classId } })
       if (!c) throw new AppError('Class not found.', 404)
     }
 
-    const student = await prisma.studentProfile.update({
-      where: { id: req.params.id },
-      data: {
-        ...(classId && { classId }),
-        ...(guardianName !== undefined && { guardianName }),
-        ...(guardianPhone !== undefined && { guardianPhone }),
-      },
-      include: { user: { select: { id: true, firstName: true, lastName: true, email: true } }, class: true },
+    const student = await prisma.$transaction(async (tx) => {
+      const existing = await tx.studentProfile.findUnique({ where: { id: req.params.id } })
+      if (!existing) throw new AppError('Student not found.', 404)
+
+      const userUpdates = {}
+      if (firstName !== undefined) userUpdates.firstName = firstName
+      if (lastName !== undefined) userUpdates.lastName = lastName
+      if (phone !== undefined) userUpdates.phone = phone
+      if (address !== undefined) userUpdates.address = address
+      if (dateOfBirth !== undefined) userUpdates.dateOfBirth = dateOfBirth ? new Date(dateOfBirth) : null
+      if (gender !== undefined) userUpdates.gender = gender
+
+      if (Object.keys(userUpdates).length > 0) {
+        await tx.user.update({ where: { id: existing.userId }, data: userUpdates })
+      }
+
+      return tx.studentProfile.update({
+        where: { id: req.params.id },
+        data: {
+          ...(classId && { classId }),
+          ...(guardianName !== undefined && { guardianName }),
+          ...(guardianPhone !== undefined && { guardianPhone }),
+        },
+        include: {
+          user: { select: { id: true, firstName: true, lastName: true, email: true, phone: true, gender: true, isActive: true } },
+          class: true,
+          feePayments: { include: { fee: true } },
+          _count: { select: { attendance: true, examResults: true, feePayments: true } },
+        },
+      })
     })
 
     res.json({ success: true, data: student })
   } catch (error) {
-    if (error.code === 'P2025') return next(new AppError('Student not found.', 404))
     next(error)
   }
 }

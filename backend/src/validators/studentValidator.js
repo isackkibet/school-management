@@ -18,6 +18,12 @@ export const createStudentSchema = Joi.object({
 
 export const updateStudentSchema = Joi.object({
   classId: Joi.string(),
+  firstName: Joi.string().min(2).max(50),
+  lastName: Joi.string().min(2).max(50),
+  phone: Joi.string().allow('', null),
+  address: Joi.string().allow('', null),
+  dateOfBirth: Joi.date().allow(null),
+  gender: Joi.string().valid('MALE', 'FEMALE', 'OTHER').allow(null),
   guardianName: Joi.string().allow('', null),
   guardianPhone: Joi.string().allow('', null),
 })
